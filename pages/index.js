@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 
 export default function Home() {
   const [step, setStep] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
   const storySteps = [
     {
       text: 'Hace mucho tiempo, en un reino olvidado, comenzó una historia que cambiaría el destino de todos...',
@@ -19,16 +20,29 @@ export default function Home() {
     }
   ];
 
+  useEffect(() => {
+    let currentText = '';
+    const timer = setInterval(() => {
+      if (currentText.length < storySteps[step].text.length) {
+        currentText = storySteps[step].text.substring(0, currentText.length + 1);
+        setDisplayedText(currentText);
+      } else {
+        clearInterval(timer);
+      }
+    }, 100); // Ajusta la velocidad del texto (100 ms por letra)
+    return () => clearInterval(timer);
+  }, [step]);
+
   const nextStep = () => {
     if (step < storySteps.length - 1) {
+      setDisplayedText('');
       setStep(step + 1);
     }
   };
 
   return (
     <div style={{
-      backgroundImage: 'url(/images/pergamino-textura.jpg)',
-      backgroundSize: 'cover',
+      backgroundColor: 'white',
       minHeight: '100vh',
       padding: '20px',
       fontFamily: '"Cormorant Garamond", serif',
@@ -63,7 +77,7 @@ export default function Home() {
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-            <p style={{ fontSize: '20px', lineHeight: '1.8', marginBottom: '20px' }}>{storySteps[step].text}</p>
+            <p style={{ fontSize: '20px', lineHeight: '1.8', marginBottom: '20px' }}>{displayedText}</p>
             <img src={storySteps[step].image} alt="story" style={{ width: '100%', borderRadius: '10px', marginBottom: '20px' }} />
             {step < storySteps.length - 1 && (
               <button 
