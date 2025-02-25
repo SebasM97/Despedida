@@ -4,51 +4,118 @@ import Head from 'next/head';
 import { FaCircle, FaSquare, FaPlay } from 'react-icons/fa';
 
 export default function Home() {
-  const [step, setStep] = useState(0);
+  // Índice del paso actual y del bloque actual dentro de ese paso
+  const [stepIndex, setStepIndex] = useState(0);
+  const [blockIndex, setBlockIndex] = useState(0);
+
+  // Texto mostrado parcialmente (efecto máquina de escribir)
   const [displayedText, setDisplayedText] = useState('');
 
-  // Pasos de la historia/desafío
+  // Control de si el bloque actual ya se completó (texto terminado de escribir o imagen cargada)
+  const [blockComplete, setBlockComplete] = useState(false);
+
+  // Datos de la historia
   const storySteps = [
     {
-      text: 'Bienvenidos al desafío. Solo los más valientes continuarán adelante.',
-      image: 'https://picsum.photos/id/1015/800/500'
+      blocks: [
+        {
+          type: 'text',
+          content: 'Bienvenidos al primer desafío. Solo los más valientes continuarán adelante.'
+        },
+        {
+          type: 'image',
+          content: 'https://picsum.photos/id/1015/800/500'
+        },
+        {
+          type: 'text',
+          content: 'Aquí va un texto adicional después de la imagen. ¿Estás listo para más?'
+        }
+      ]
     },
     {
-      text: 'El primer reto os pondrá a prueba. Solo uno saldrá victorioso.',
-      image: 'https://picsum.photos/id/1016/800/500'
+      blocks: [
+        {
+          type: 'text',
+          content: 'El siguiente reto será aún más difícil. Prepara tu mente.'
+        },
+        {
+          type: 'image',
+          content: 'https://picsum.photos/id/1016/800/500'
+        }
+      ]
     },
     {
-      text: 'Preparad vuestras mentes y superad el segundo desafío.',
-      image: 'https://picsum.photos/id/1020/800/500'
+      blocks: [
+        {
+          type: 'text',
+          content: 'Has llegado lejos. Supera este último desafío para consagrarte campeón.'
+        },
+        {
+          type: 'image',
+          content: 'https://picsum.photos/id/1020/800/500'
+        }
+      ]
     }
   ];
 
-  // Efecto para ir escribiendo el texto
+  // Obtiene el bloque actual
+  const currentStep = storySteps[stepIndex];
+  const currentBlock = currentStep.blocks[blockIndex];
+
+  // Efecto para el bloque de texto (máquina de escribir)
   useEffect(() => {
-    if (step >= 0) {
+    // Reseteamos el texto y el estado de “completado”
+    setDisplayedText('');
+    setBlockComplete(false);
+
+    if (currentBlock.type === 'text') {
       let currentText = '';
       const timer = setInterval(() => {
-        if (currentText.length < storySteps[step].text.length) {
-          currentText = storySteps[step].text.substring(0, currentText.length + 1);
+        if (currentText.length < currentBlock.content.length) {
+          currentText = currentBlock.content.substring(0, currentText.length + 1);
           setDisplayedText(currentText);
         } else {
+          // Acabó de escribir el texto
           clearInterval(timer);
+          setBlockComplete(true);
         }
-      }, 100); // Velocidad de aparición (ms) a tu gusto
+      }, 50); // Velocidad de escritura (ajusta a tu gusto)
+
       return () => clearInterval(timer);
     }
-  }, [step]);
 
-  // Avanza al siguiente paso
-  const nextStep = () => {
-    if (step < storySteps.length - 1) {
-      setDisplayedText('');
-      setStep(step + 1);
+    if (currentBlock.type === 'image') {
+      // Para imágenes, no usamos el efecto de texto
+      // Esperamos a que cargue la imagen antes de marcarlo como completado
+      setDisplayedText(''); // Sin texto a mostrar en bloque de imagen
+      // No podemos saber exactamente cuándo se cargó la imagen sin un <img> real
+      // pero haremos un truco en la parte del <img> con onLoad.
+    }
+  }, [stepIndex, blockIndex]);
+
+  // Maneja el evento “onLoad” de la imagen para marcarlo como bloque completado
+  const handleImageLoad = () => {
+    setBlockComplete(true);
+  };
+
+  // Función para avanzar al siguiente bloque o al siguiente paso
+  const nextBlock = () => {
+    // Ver si hay más bloques en el paso actual
+    if (blockIndex < currentStep.blocks.length - 1) {
+      // Avanzar al siguiente bloque
+      setBlockIndex((prev) => prev + 1);
+    } else {
+      // Si no hay más bloques, pasar al siguiente paso
+      if (stepIndex < storySteps.length - 1) {
+        setStepIndex((prev) => prev + 1);
+        setBlockIndex(0);
+      }
     }
   };
 
-  // Comprueba si el texto actual ya coincide con el texto completo del paso
-  const isTextComplete = displayedText.length === storySteps[step].text.length;
+  // Ver si estamos en el último paso y último bloque
+  const isLastBlockOfLastStep =
+    stepIndex === storySteps.length - 1 && blockIndex === currentStep.blocks.length - 1;
 
   return (
     <div
@@ -69,39 +136,58 @@ export default function Home() {
       </Head>
 
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-
-          {/* Título que cambia si estás en el primer paso o en uno intermedio */}
+        {/* Contenedor animado */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
           <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>
-            {step === 0 ? 'Bienvenidos al Desafío' : `Prueba 1`}
+            {`Paso ${stepIndex + 1}, Bloque ${blockIndex + 1}`}
           </h1>
 
-          
+          <motion.div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '20px',
+              fontSize: '30px',
+              color: '#FF3E00',
+              marginBottom: '20px'
+            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
+          >
+            <FaCircle />
+            <FaSquare />
+            <FaPlay />
+          </motion.div>
 
-          {/* Texto que aparece progresivamente */}
-          <p style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '20px' }}>
-            {displayedText}
-          </p>
+          {/* Si el bloque es de tipo 'text', mostramos displayedText */}
+          {currentBlock.type === 'text' && (
+            <p style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '20px' }}>
+              {displayedText}
+            </p>
+          )}
 
-          {/* Imagen con animación */}
-          {storySteps[step]?.image && (
+          {/* Si el bloque es de tipo 'image', mostramos la imagen con onLoad */}
+          {currentBlock.type === 'image' && (
             <motion.img
-              src={storySteps[step].image}
-              alt={`Paso ${step}`}
+              src={currentBlock.content}
+              alt='Imagen del desafío'
               style={{ width: '100%', borderRadius: '10px', marginBottom: '20px' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
+              onLoad={handleImageLoad} // Se marca como completo cuando cargue
             />
           )}
 
-          {/* Botón de siguiente paso solo cuando el texto está completo */}
-          {isTextComplete && step < storySteps.length - 1 && (
+          {/* Botón 'Siguiente' solo aparece si el bloque está completo (texto acabado o imagen cargada) */}
+          {!isLastBlockOfLastStep && blockComplete && (
             <button
-              onClick={nextStep}
+              onClick={nextBlock}
               style={{
                 display: 'block',
                 margin: '0 auto',
+                marginTop: '20px',
                 padding: '10px 20px',
                 fontSize: '18px',
                 backgroundColor: '#FF3E00',
@@ -116,6 +202,13 @@ export default function Home() {
             >
               Siguiente
             </button>
+          )}
+
+          {/* Si es el último bloque del último paso, podrías mostrar un mensaje final */}
+          {isLastBlockOfLastStep && blockComplete && (
+            <p style={{ textAlign: 'center', marginTop: '20px' }}>
+              ¡Has completado todos los desafíos!
+            </p>
           )}
         </motion.div>
       </div>
