@@ -70,9 +70,10 @@ export default function Home() {
 
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
+
           {/* Título que cambia si estás en el primer paso o en uno intermedio */}
           <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>
-            {step === 0 ? 'Bienvenidos al Desafío' : `Prueba 1{step}`}
+            {step === 0 ? 'Bienvenidos al Desafío' : `Prueba 1`}
           </h1>
 
           
