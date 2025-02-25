@@ -7,22 +7,19 @@ export default function Home() {
   const [step, setStep] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
 
-  // Pasos de la historia/desafío (puedes modificar el texto, las imágenes y los audios)
+  // Pasos de la historia/desafío
   const storySteps = [
     {
       text: 'Bienvenidos al desafío. Solo los más valientes continuarán adelante.',
-      image: 'https://picsum.photos/id/1015/800/500', // Ejemplo de URL de imagen
-      sound: 'https://www.fesliyanstudios.com/play-mp3/387' // Ejemplo de URL de sonido
+      image: 'https://picsum.photos/id/1015/800/500'
     },
     {
       text: 'El primer reto os pondrá a prueba. Solo uno saldrá victorioso.',
-      image: 'https://picsum.photos/id/1016/800/500', // Otro ejemplo de URL
-      sound: 'https://www.fesliyanstudios.com/play-mp3/6767'
+      image: 'https://picsum.photos/id/1016/800/500'
     },
     {
       text: 'Preparad vuestras mentes y superad el segundo desafío.',
-      image: 'https://picsum.photos/id/1020/800/500',
-      sound: 'https://www.fesliyanstudios.com/play-mp3/6772'
+      image: 'https://picsum.photos/id/1020/800/500'
     }
   ];
 
@@ -37,18 +34,8 @@ export default function Home() {
         } else {
           clearInterval(timer);
         }
-      }, 100); // Ajusta la velocidad (ms) a tu gusto
+      }, 100); // Velocidad de aparición (ms) a tu gusto
       return () => clearInterval(timer);
-    }
-  }, [step]);
-
-  // Reproduce el sonido de cada paso
-  useEffect(() => {
-    if (storySteps[step]?.sound) {
-      const audio = new Audio(storySteps[step].sound);
-      audio.play().catch(() => {
-        // Ignorar errores si el autoplay está bloqueado
-      });
     }
   }, [step]);
 
@@ -59,6 +46,9 @@ export default function Home() {
       setStep(step + 1);
     }
   };
+
+  // Comprueba si el texto actual ya coincide con el texto completo del paso
+  const isTextComplete = displayedText.length === storySteps[step].text.length;
 
   return (
     <div
@@ -104,12 +94,12 @@ export default function Home() {
             <FaPlay />
           </motion.div>
 
-          {/* Texto progresivo */}
+          {/* Texto que aparece progresivamente */}
           <p style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '20px' }}>
             {displayedText}
           </p>
 
-          {/* Imagen con animación de aparición */}
+          {/* Imagen con animación */}
           {storySteps[step]?.image && (
             <motion.img
               src={storySteps[step].image}
@@ -121,8 +111,8 @@ export default function Home() {
             />
           )}
 
-          {/* Botón de siguiente paso si no es el último */}
-          {step < storySteps.length - 1 && (
+          {/* Botón de siguiente paso solo cuando el texto está completo */}
+          {isTextComplete && step < storySteps.length - 1 && (
             <button
               onClick={nextStep}
               style={{
