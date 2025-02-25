@@ -72,27 +72,10 @@ export default function Home() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
           {/* Título que cambia si estás en el primer paso o en uno intermedio */}
           <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>
-            {step === 0 ? 'Bienvenidos al Desafío' : `Prueba ${step}`}
+            {step === 0 ? 'Bienvenidos al Desafío' : `Prueba 1{step}`}
           </h1>
 
-          {/* Iconos de triángulo, cuadrado y círculo */}
-          <motion.div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '20px',
-              fontSize: '30px',
-              color: '#FF3E00',
-              marginBottom: '20px'
-            }}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
-          >
-            <FaCircle />
-            <FaSquare />
-            <FaPlay />
-          </motion.div>
+          
 
           {/* Texto que aparece progresivamente */}
           <p style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '20px' }}>
