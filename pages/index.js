@@ -4,25 +4,23 @@ import { motion } from 'framer-motion';
 import { FaCircle, FaSquare, FaPlay } from 'react-icons/fa';
 
 /**
- * Componente auxiliar para texto con efecto "máquina de escribir".
- * - `text`: el texto a mostrar.
- * - `speed`: ms por caracter.
- * - `style`: objeto de estilos CSS para el <p>.
+ * Componente para escribir texto con efecto 'máquina de escribir'.
+ * - `text`: El contenido del texto.
+ * - `speed`: Velocidad (ms) por carácter.
+ * - `style`: Objeto de estilo CSS para el <p>.
  */
 function TypedText({ text, speed = 50, style }) {
-  const [display, setDisplay] = useState('');
+  // Convertimos `text` a cadena vacía si es `undefined` o `null`.
+  const safeText = text || '';
+
+  const [displayed, setDisplayed] = useState('');
 
   useEffect(() => {
-    // Si no hay texto, salimos
-    if (!text) {
-      setDisplay('');
-      return;
-    }
     let i = 0;
-    setDisplay(''); // Reinicia cada vez que cambie 'text'
+    setDisplayed(''); // Reinicia cada vez que cambia el texto
     const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplay((prev) => prev + text[i]);
+      if (i < safeText.length) {
+        setDisplayed((prev) => prev + safeText[i]);
         i++;
       } else {
         clearInterval(timer);
@@ -30,18 +28,22 @@ function TypedText({ text, speed = 50, style }) {
     }, speed);
 
     return () => clearInterval(timer);
-  }, [text, speed]);
+  }, [safeText, speed]);
 
-  return <p style={style}>{display}</p>;
+  return <p style={style}>{displayed}</p>;
 }
 
 export default function Home() {
-  // En qué paso estamos
+  // Índice del paso en el que estamos
   const [stepIndex, setStepIndex] = useState(0);
-  // Cuántos bloques hemos revelado en el paso actual
+  // Cuántos bloques se han revelado en el paso actual
   const [revealedBlocksCount, setRevealedBlocksCount] = useState(1);
 
-  // Datos de ejemplo:
+  /**
+   * storySteps: Array de pasos.
+   * Cada paso tiene un array "blocks", donde cada bloque es:
+   *   { type: 'text' | 'image', content: '...' }
+   */
   const storySteps = [
     {
       blocks: [
@@ -89,53 +91,31 @@ export default function Home() {
     }
   ];
 
-  // Cada vez que cambie el paso, volvemos a mostrar el primer bloque
+  // Si cambiamos de paso, mostramos primero su bloque inicial
   useEffect(() => {
     setRevealedBlocksCount(1);
   }, [stepIndex]);
 
-  // Verifica que storySteps tenga algo
-  if (!Array.isArray(storySteps) || storySteps.length === 0) {
-    return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        <h1>Error: no hay pasos definidos.</h1>
-      </div>
-    );
-  }
-
-  // Asegúrate de que stepIndex esté dentro de los límites
-  const safeStepIndex = Math.min(Math.max(stepIndex, 0), storySteps.length - 1);
-  const currentStep = storySteps[safeStepIndex];
-
-  // Si el paso actual está mal definido o no tiene bloques, mostramos error
-  if (!currentStep || !Array.isArray(currentStep.blocks)) {
-    return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        <h1>Error: el paso {safeStepIndex + 1} no tiene bloques válidos.</h1>
-      </div>
-    );
-  }
-
+  // Paso actual y sus bloques
+  const currentStep = storySteps[stepIndex];
   const totalBlocks = currentStep.blocks.length;
-  // Ajustar revealedBlocksCount a los límites
-  const safeRevealedBlocksCount = Math.min(Math.max(revealedBlocksCount, 1), totalBlocks);
 
-  // Filtra los bloques que se mostrarán
-  const revealedBlocks = currentStep.blocks.slice(0, safeRevealedBlocksCount);
+  // Bloques que estamos mostrando ahora
+  const revealedBlocks = currentStep.blocks.slice(0, revealedBlocksCount);
 
   // ¿Estamos en el último paso?
-  const isLastStep = safeStepIndex === storySteps.length - 1;
-  // ¿Están todos los bloques del paso revelados?
-  const areAllBlocksRevealed = safeRevealedBlocksCount >= totalBlocks;
+  const isLastStep = stepIndex === storySteps.length - 1;
+  // ¿Ya se mostraron todos los bloques del paso actual?
+  const areAllBlocksRevealed = revealedBlocksCount >= totalBlocks;
 
-  // Mostrar el siguiente bloque en el mismo paso
+  // Muestra el siguiente bloque (texto o imagen) del paso actual
   const handleContinueBlock = () => {
     if (!areAllBlocksRevealed) {
       setRevealedBlocksCount((prev) => prev + 1);
     }
   };
 
-  // Avanzar al siguiente paso
+  // Pasa al siguiente paso
   const handleNextStep = () => {
     if (!isLastStep) {
       setStepIndex((prev) => prev + 1);
@@ -166,12 +146,12 @@ export default function Home() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          {/* Título del paso */}
+          {/* Título (muestra el número de paso) */}
           <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>
-            Paso {safeStepIndex + 1}
+            Paso {stepIndex + 1}
           </h1>
 
-          {/* Iconos animados (triángulo, cuadrado, círculo) */}
+          {/* Iconos animados (círculo, cuadrado, triángulo) */}
           <motion.div
             style={{
               display: 'flex',
@@ -190,69 +170,37 @@ export default function Home() {
             <FaPlay />
           </motion.div>
 
-          {/* Renderiza los bloques revelados */}
+          {/* Muestra los bloques revelados hasta ahora */}
           {revealedBlocks.map((block, i) => {
-            // Verificar que el objeto block esté bien formado
-            if (!block || !block.type) return null;
-
             if (block.type === 'text') {
-              // Si no tiene 'content', no mostrar nada
-              if (!block.content || typeof block.content !== 'string') {
-                return (
-                  <p key={i} style={{ color: 'red' }}>
-                    Error: texto inválido en bloque {i + 1}.
-                  </p>
-                );
-              }
+              // Texto con efecto de escritura
               return (
                 <TypedText
                   key={i}
                   text={block.content}
                   speed={50}
-                  style={{
-                    fontSize: '18px',
-                    lineHeight: '1.8',
-                    marginBottom: '20px'
-                  }}
+                  style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '20px' }}
                 />
               );
-            }
-
-            if (block.type === 'image') {
-              // Si no tiene 'content', no mostrar nada
-              if (!block.content || typeof block.content !== 'string') {
-                return (
-                  <p key={i} style={{ color: 'red' }}>
-                    Error: URL inválida en bloque {i + 1}.
-                  </p>
-                );
-              }
+            } else if (block.type === 'image') {
+              // Imagen con animación de aparición
               return (
                 <motion.img
                   key={i}
                   src={block.content}
-                  alt={`bloque-${i}`}
-                  style={{
-                    width: '100%',
-                    borderRadius: '10px',
-                    marginBottom: '20px'
-                  }}
+                  alt={`Paso ${stepIndex + 1} - Bloque ${i + 1}`}
+                  style={{ width: '100%', borderRadius: '10px', marginBottom: '20px' }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
                 />
               );
             }
-
-            // Otros tipos de bloque
-            return (
-              <p key={i} style={{ color: 'red' }}>
-                Tipo de bloque desconocido: {block.type}
-              </p>
-            );
+            // Si hay algún bloque con un type desconocido
+            return null;
           })}
 
-          {/* Botón para mostrar el siguiente bloque del mismo paso (si no hemos mostrado todos) */}
+          {/* Botón para mostrar el siguiente bloque (si no hemos mostrado todos en este paso) */}
           {!areAllBlocksRevealed && (
             <button
               onClick={handleContinueBlock}
@@ -275,7 +223,7 @@ export default function Home() {
             </button>
           )}
 
-          {/* Botón para pasar al siguiente paso (si estamos en el último bloque y no es el último paso) */}
+          {/* Botón para pasar al siguiente paso (si ya se mostraron todos los bloques y no es el último paso) */}
           {areAllBlocksRevealed && !isLastStep && (
             <button
               onClick={handleNextStep}
@@ -288,17 +236,14 @@ export default function Home() {
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease'
+                cursor: 'pointer'
               }}
-              onMouseOver={(e) => (e.target.style.backgroundColor = '#D32F2F')}
-              onMouseOut={(e) => (e.target.style.backgroundColor = '#FF3E00')}
             >
               Siguiente Paso
             </button>
           )}
 
-          {/* Mensaje final si es el último paso y ya se revelaron todos los bloques */}
+          {/* Mensaje final si es el último paso y todos los bloques fueron revelados */}
           {areAllBlocksRevealed && isLastStep && (
             <p style={{ textAlign: 'center', marginTop: '20px' }}>
               ¡Has completado todos los pasos!
@@ -309,4 +254,3 @@ export default function Home() {
     </div>
   );
 }
-
