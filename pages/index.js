@@ -230,7 +230,7 @@ export default function Home() {
           {/* Si es el último paso y ya se revelaron todos los bloques, mensaje final */}
           {areAllBlocksRevealed && isLastStep && (
             <p style={{ textAlign: 'center', marginTop: '20px' }}>
-              ¡Has completado todos los pasos!
+              ¡Buena Suerte!
             </p>
           )}
         </motion.div>
